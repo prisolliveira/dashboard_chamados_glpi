@@ -1,0 +1,1 @@
+- Para aplicar uma lógica linha por linha, criamos uma função com as ações e usamos o ".apply" para a coluna desejada.

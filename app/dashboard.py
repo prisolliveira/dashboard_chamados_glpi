@@ -1,10 +1,12 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import locale
 from style import CUSTOM_CSS
 
 df = pd.read_csv("../dados/chamados_glpi_tratados.csv", sep=";")
 
+locale.setlocale(locale.LC_TIME, "pt_BR.UTF-8")
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 st.set_page_config(layout="wide")
 
@@ -38,12 +40,39 @@ card4.metric(label="Em andamento", value=total_andamento)
 
 # VISUALIZAÇÕES
 
-bloco1, bloco2 = st.columns(2)
+# 1) gráfico de linhas de rendimento
 
-with bloco1:
-    # 1) gráfico de chamados por equipamento
+st.subheader("VOLUME DE CHAMADOS POR MÊS")
 
-    st.subheader("Chamados por Equipamento")
+df["Mês"] = pd.to_datetime(df["Data de abertura"], 
+    format="%d/%m/%Y %H:%M", 
+    errors="coerce",).dt.to_period("M").astype(str)
+
+chamados_por_mes = df.groupby("Mês").size().reset_index(name="Quantidade")
+
+grafico_taxa = px.line(
+    chamados_por_mes,
+    x="Mês",
+    y="Quantidade",
+    markers=True
+
+)
+
+grafico_taxa.update_layout(
+    xaxis_title="",
+    yaxis_title="",
+)
+
+st.plotly_chart(grafico_taxa, use_container_width=True)
+
+
+
+gf_eq, gf_loc = st.columns(2)
+
+with gf_eq:
+    # 2) gráfico de chamados por equipamento
+
+    st.subheader("CHAMADOS POR EQUIPAMENTO")
 
     eq_possiveis = ["CAMERA", "DVR", "NVR", "SPEED", "ALARME"]
     eq_contagem = {}
@@ -78,9 +107,11 @@ with bloco1:
 
     st.plotly_chart(grafico_equipamento)
 
-    # 2) gráfico de chamados por unidade/setor
 
-    st.subheader("Chamados por Localização")
+with gf_loc:
+    # 3) gráfico de chamados por unidade/setor
+
+    st.subheader("CHAMADOS POR LOCALIZAÇÃO")
     opcao_loc = st.radio( # seletor que alterna
         "Visualizar por:",
         options = ["Unidade", "Setor"],
@@ -113,32 +144,30 @@ with bloco1:
     st.plotly_chart(grafico_local)
 
 
-with bloco2:
-    # 3) tabela de chamados novos/em andamento/pendente
+# 4) tabela de chamados novos/em andamento/pendente
 
-    st.subheader("Chamados sem finalização")
+st.subheader("CHAMADOS SEM FINALIZAÇÃO")
 
-    data_extracao = pd.to_datetime("2026-09-10", format='mixed')
+data_extracao = pd.to_datetime("2026-09-10", format='mixed')
 
-    opcao_tab = st.radio(
-        "Visualizar por status:",
-        options=["Novo", "Em atendimento (atribuído)", "Pendente"]
-    )
+opcao_tab = st.radio(
+    "Visualizar por status:",
+    options=["Novo", "Em atendimento (atribuído)", "Pendente"]
+)
 
-    nao_finalizados = df[df["Status"] == opcao_tab].copy()
+nao_finalizados = df[df["Status"] == opcao_tab].copy()
+nao_finalizados["Última atualização"] = pd.to_datetime(
+    nao_finalizados["Última atualização"],
+    format="%d/%m/%Y %H:%M",
+    errors="coerce",
+)
 
-    nao_finalizados["Última atualização"] = pd.to_datetime(
-        nao_finalizados["Última atualização"],
-        format="%d/%m/%Y %H:%M",
-        errors="coerce",
-    )
+nao_finalizados["Dias sem atualização"] = (data_extracao - nao_finalizados["Última atualização"]).dt.days
+tabela_parados = nao_finalizados[["ID", "Status", "Equipamento", "Setor", "Dias sem atualização"]]
 
-    nao_finalizados["Dias sem atualização"] = (data_extracao - nao_finalizados["Última atualização"]).dt.days
+st.dataframe(
+    tabela_parados.sort_values("Dias sem atualização", ascending=False),
+    use_container_width=True,
+    hide_index=True
+)
 
-    tabela_parados = nao_finalizados[["ID", "Status", "Equipamento", "Setor", "Dias sem atualização"]]
-
-    st.dataframe(
-        tabela_parados.sort_values("Dias sem atualização", ascending=False),
-        use_container_width=True,
-        hide_index=True
-    )

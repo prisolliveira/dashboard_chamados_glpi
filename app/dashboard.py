@@ -6,11 +6,13 @@ from style import CUSTOM_CSS
 df = pd.read_csv("../dados/chamados_glpi_tratados.csv", sep=";")
 
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+st.set_page_config(layout="wide")
 
 # CABEÇALHO
 
 st.title("Painel de Chamados de Monitoramento")
 st.caption("Prefeitura de Goianira · Dados extraídos em 10/09/2026")
+st.caption("Período de análise: últimos 6 meses (março a setembro de 2026)")
 
 # KPI CARDS
 
@@ -27,36 +29,82 @@ horas = int(tempo_medio % 24)
 
 total_andamento = (df["Status"] == "Em atendimento (atribuído)").sum()
 
-cl1, cl2, cl3, cl4 = st.columns(4, gap="small")
+card1, card2, card3, card4 = st.columns(4, gap="small")
 
-cl1.metric(label="Total", value=total_chamados)
-cl2.metric(label="Solucionados", value=f"{total_solucionados:.1f}%")
-cl3.metric(label="Tempo médio", value=f"{dias}d {horas}h")
-cl4.metric(label="Em andamento", value=total_andamento)
+card1.metric(label="Total", value=total_chamados)
+card2.metric(label="Solucionados", value=f"{total_solucionados:.1f}%")
+card3.metric(label="Tempo médio", value=f"{dias}d {horas}h")
+card4.metric(label="Em andamento", value=total_andamento)
 
 # GRÁFICOS
-# gráfico de chamados por equipamento
+# 1) gráfico de chamados por equipamento
+
+st.subheader("Chamados por Equipamento")
 
 eq_possiveis = ["CAMERA", "DVR", "NVR", "SPEED", "ALARME"]
-contagem_final = {}
+eq_contagem = {}
 
 for eq in eq_possiveis:
-    contagem_final[eq] = df["Equipamento"].str.contains(eq, na=False).sum()
+    eq_contagem[eq] = df["Equipamento"].str.contains(eq, na=False).sum()
 
-contagem_equipamento = pd.DataFrame(list(contagem_final.items()), columns=["Equipamento", "Quantidade"])
+eq_confere = df["Equipamento"].str.contains("|".join(eq_possiveis), na=False)
+eq_contagem["OUTROS"] = (~eq_confere).sum() # ~ Inversao de valor lógico
 
-grafico = px.bar(
-    contagem_equipamento.sort_values("Quantidade", ascending=True),
+contagem_equipamento = pd.DataFrame(list(eq_contagem.items()), columns=["Equipamento", "Quantidade"])
+
+equipamentos = contagem_equipamento[contagem_equipamento["Equipamento"] != "OUTROS"].sort_values("Quantidade", ascending=True)
+outros_eq = contagem_equipamento[contagem_equipamento["Equipamento"] == "OUTROS"]
+
+eq_contagem_ordenada = pd.concat([outros_eq, equipamentos])
+
+grafico_equipamento = px.bar(
+    eq_contagem_ordenada, # atribui os dados
     x="Quantidade",
     y="Equipamento",
     orientation="h",
-    title="Chamados por Equipamento",
+    text="Quantidade" # texto das barras
+)
+
+grafico_equipamento.update_traces(textposition="outside") # define o texto para fora das barras
+grafico_equipamento.update_layout( # retira o nome dos eixos
+    xaxis_title="",
+    yaxis_title="",
+    xaxis=dict(showticklabels=False) # retira números do eixo X
+)
+
+st.plotly_chart(grafico_equipamento)
+
+# 2) gráfico de chamados por unidade/setor
+
+st.subheader("Chamados por Localização")
+opcao = st.radio( # seletor que alterna
+    "Visualizar por:",
+    options = ["Unidade", "Setor"],
+    horizontal = True
+)
+
+loc_contagem = df[opcao].value_counts().reset_index()
+loc_contagem.columns = [opcao, "Quantidade"]
+
+locais = loc_contagem[loc_contagem[opcao] != "NAO IDENTIFICADO"].sort_values("Quantidade", ascending=True)
+nao_identificado_loc = loc_contagem[loc_contagem[opcao] == "NAO IDENTIFICADO"]
+
+loc_contagem_ordenada = pd.concat([nao_identificado_loc, locais])
+
+grafico_local = px.bar(
+    loc_contagem_ordenada,
+    x="Quantidade",
+    y=opcao,
+    orientation="h",
+    title=f"Chamados por {opcao}",
     text="Quantidade"
 )
 
-grafico.update_traces(textposition="outside")
-grafico.update_layout(
-    xaxis=dict(range=[0, 200])
+grafico_local.update_traces(textposition="outside") 
+grafico_local.update_layout(
+    xaxis_title="",
+    yaxis_title="",
+    xaxis=dict(showticklabels=False)
 )
 
-st.plotly_chart(grafico)
+st.plotly_chart(grafico_local)

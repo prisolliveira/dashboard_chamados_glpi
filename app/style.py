@@ -26,12 +26,3 @@ CUSTOM_CSS = """
     }
     </style>
 """
-
-# Paleta de cores usada nos gráficos de equipamento
-CORES_EQUIPAMENTO = {
-    "CAMERA": "#408BDB",
-    "DVR": "#7BB3E8",
-    "NVR": "#A8D0F0",
-    "SPEED": "#D4E8F7",
-    "ALARME": "#E63946",
-}

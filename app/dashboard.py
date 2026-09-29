@@ -36,75 +36,109 @@ card2.metric(label="Solucionados", value=f"{total_solucionados:.1f}%")
 card3.metric(label="Tempo médio", value=f"{dias}d {horas}h")
 card4.metric(label="Em andamento", value=total_andamento)
 
-# GRÁFICOS
-# 1) gráfico de chamados por equipamento
+# VISUALIZAÇÕES
 
-st.subheader("Chamados por Equipamento")
+bloco1, bloco2 = st.columns(2)
 
-eq_possiveis = ["CAMERA", "DVR", "NVR", "SPEED", "ALARME"]
-eq_contagem = {}
+with bloco1:
+    # 1) gráfico de chamados por equipamento
 
-for eq in eq_possiveis:
-    eq_contagem[eq] = df["Equipamento"].str.contains(eq, na=False).sum()
+    st.subheader("Chamados por Equipamento")
 
-eq_confere = df["Equipamento"].str.contains("|".join(eq_possiveis), na=False)
-eq_contagem["OUTROS"] = (~eq_confere).sum() # ~ Inversao de valor lógico
+    eq_possiveis = ["CAMERA", "DVR", "NVR", "SPEED", "ALARME"]
+    eq_contagem = {}
 
-contagem_equipamento = pd.DataFrame(list(eq_contagem.items()), columns=["Equipamento", "Quantidade"])
+    for eq in eq_possiveis:
+        eq_contagem[eq] = df["Equipamento"].str.contains(eq, na=False).sum()
 
-equipamentos = contagem_equipamento[contagem_equipamento["Equipamento"] != "OUTROS"].sort_values("Quantidade", ascending=True)
-outros_eq = contagem_equipamento[contagem_equipamento["Equipamento"] == "OUTROS"]
+    eq_confere = df["Equipamento"].str.contains("|".join(eq_possiveis), na=False)
+    eq_contagem["OUTROS"] = (~eq_confere).sum() # ~ Inversao de valor lógico
 
-eq_contagem_ordenada = pd.concat([outros_eq, equipamentos])
+    contagem_equipamento = pd.DataFrame(list(eq_contagem.items()), columns=["Equipamento", "Quantidade"])
 
-grafico_equipamento = px.bar(
-    eq_contagem_ordenada, # atribui os dados
-    x="Quantidade",
-    y="Equipamento",
-    orientation="h",
-    text="Quantidade" # texto das barras
-)
+    equipamentos = contagem_equipamento[contagem_equipamento["Equipamento"] != "OUTROS"].sort_values("Quantidade", ascending=True)
+    outros_eq = contagem_equipamento[contagem_equipamento["Equipamento"] == "OUTROS"]
 
-grafico_equipamento.update_traces(textposition="outside") # define o texto para fora das barras
-grafico_equipamento.update_layout( # retira o nome dos eixos
-    xaxis_title="",
-    yaxis_title="",
-    xaxis=dict(showticklabels=False) # retira números do eixo X
-)
+    eq_contagem_ordenada = pd.concat([outros_eq, equipamentos])
 
-st.plotly_chart(grafico_equipamento)
+    grafico_equipamento = px.bar(
+        eq_contagem_ordenada, # atribui os dados
+        x="Quantidade",
+        y="Equipamento",
+        orientation="h",
+        text="Quantidade" # texto das barras
+    )
 
-# 2) gráfico de chamados por unidade/setor
+    grafico_equipamento.update_traces(textposition="outside") # define o texto para fora das barras
+    grafico_equipamento.update_layout( # retira o nome dos eixos
+        xaxis_title="",
+        yaxis_title="",
+        xaxis=dict(showticklabels=False) # retira números do eixo X
+    )
 
-st.subheader("Chamados por Localização")
-opcao = st.radio( # seletor que alterna
-    "Visualizar por:",
-    options = ["Unidade", "Setor"],
-    horizontal = True
-)
+    st.plotly_chart(grafico_equipamento)
 
-loc_contagem = df[opcao].value_counts().reset_index()
-loc_contagem.columns = [opcao, "Quantidade"]
+    # 2) gráfico de chamados por unidade/setor
 
-locais = loc_contagem[loc_contagem[opcao] != "NAO IDENTIFICADO"].sort_values("Quantidade", ascending=True)
-nao_identificado_loc = loc_contagem[loc_contagem[opcao] == "NAO IDENTIFICADO"]
+    st.subheader("Chamados por Localização")
+    opcao_loc = st.radio( # seletor que alterna
+        "Visualizar por:",
+        options = ["Unidade", "Setor"],
+        horizontal = True
+    )
 
-loc_contagem_ordenada = pd.concat([nao_identificado_loc, locais])
+    loc_contagem = df[opcao_loc].value_counts().reset_index()
+    loc_contagem.columns = [opcao_loc, "Quantidade"]
 
-grafico_local = px.bar(
-    loc_contagem_ordenada,
-    x="Quantidade",
-    y=opcao,
-    orientation="h",
-    title=f"Chamados por {opcao}",
-    text="Quantidade"
-)
+    locais = loc_contagem[loc_contagem[opcao_loc] != "NAO IDENTIFICADO"].sort_values("Quantidade", ascending=True)
+    nao_identificado_loc = loc_contagem[loc_contagem[opcao_loc] == "NAO IDENTIFICADO"]
 
-grafico_local.update_traces(textposition="outside") 
-grafico_local.update_layout(
-    xaxis_title="",
-    yaxis_title="",
-    xaxis=dict(showticklabels=False)
-)
+    loc_contagem_ordenada = pd.concat([nao_identificado_loc, locais])
 
-st.plotly_chart(grafico_local)
+    grafico_local = px.bar(
+        loc_contagem_ordenada,
+        x="Quantidade",
+        y=opcao_loc,
+        orientation="h",
+        text="Quantidade"
+    )
+
+    grafico_local.update_traces(textposition="outside") 
+    grafico_local.update_layout(
+        xaxis_title="",
+        yaxis_title="",
+        xaxis=dict(showticklabels=False)
+    )
+
+    st.plotly_chart(grafico_local)
+
+
+with bloco2:
+    # 3) tabela de chamados novos/em andamento/pendente
+
+    st.subheader("Chamados sem finalização")
+
+    data_extracao = pd.to_datetime("2026-09-10", format='mixed')
+
+    opcao_tab = st.radio(
+        "Visualizar por status:",
+        options=["Novo", "Em atendimento (atribuído)", "Pendente"]
+    )
+
+    nao_finalizados = df[df["Status"] == opcao_tab].copy()
+
+    nao_finalizados["Última atualização"] = pd.to_datetime(
+        nao_finalizados["Última atualização"],
+        format="%d/%m/%Y %H:%M",
+        errors="coerce",
+    )
+
+    nao_finalizados["Dias sem atualização"] = (data_extracao - nao_finalizados["Última atualização"]).dt.days
+
+    tabela_parados = nao_finalizados[["ID", "Status", "Equipamento", "Setor", "Dias sem atualização"]]
+
+    st.dataframe(
+        tabela_parados.sort_values("Dias sem atualização", ascending=False),
+        use_container_width=True,
+        hide_index=True
+    )

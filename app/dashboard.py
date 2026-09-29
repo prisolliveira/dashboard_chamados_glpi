@@ -2,13 +2,11 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import locale
-from style import CUSTOM_CSS
 
 df = pd.read_csv("../dados/chamados_glpi_tratados.csv", sep=";")
 
 locale.setlocale(locale.LC_TIME, "pt_BR.UTF-8")
-st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
-st.set_page_config(layout="wide")
+st.set_page_config(layout="wide", page_title="Chamados GLPI - Monitoramento", page_icon="📊")
 
 # CABEÇALHO
 
@@ -42,7 +40,7 @@ card4.metric(label="Em andamento", value=total_andamento)
 
 # 1) gráfico de linhas de rendimento
 
-st.subheader("VOLUME DE CHAMADOS POR MÊS")
+st.markdown("### VOLUME DE CHAMADOS POR MÊS")
 
 df["Mês"] = pd.to_datetime(df["Data de abertura"], 
     format="%d/%m/%Y %H:%M", 
@@ -50,7 +48,7 @@ df["Mês"] = pd.to_datetime(df["Data de abertura"],
 
 chamados_por_mes = df.groupby("Mês").size().reset_index(name="Quantidade")
 
-grafico_taxa = px.line(
+grafico_volume = px.line(
     chamados_por_mes,
     x="Mês",
     y="Quantidade",
@@ -58,13 +56,12 @@ grafico_taxa = px.line(
 
 )
 
-grafico_taxa.update_layout(
+grafico_volume.update_layout(
     xaxis_title="",
     yaxis_title="",
 )
 
-st.plotly_chart(grafico_taxa, use_container_width=True)
-
+st.plotly_chart(grafico_volume, use_container_width=True)
 
 
 gf_eq, gf_loc = st.columns(2)
@@ -72,7 +69,7 @@ gf_eq, gf_loc = st.columns(2)
 with gf_eq:
     # 2) gráfico de chamados por equipamento
 
-    st.subheader("CHAMADOS POR EQUIPAMENTO")
+    st.markdown("### CHAMADOS POR EQUIPAMENTO")
 
     eq_possiveis = ["CAMERA", "DVR", "NVR", "SPEED", "ALARME"]
     eq_contagem = {}
@@ -111,7 +108,7 @@ with gf_eq:
 with gf_loc:
     # 3) gráfico de chamados por unidade/setor
 
-    st.subheader("CHAMADOS POR LOCALIZAÇÃO")
+    st.markdown("### CHAMADOS POR LOCALIZAÇÃO")
     opcao_loc = st.radio( # seletor que alterna
         "Visualizar por:",
         options = ["Unidade", "Setor"],
@@ -146,7 +143,7 @@ with gf_loc:
 
 # 4) tabela de chamados novos/em andamento/pendente
 
-st.subheader("CHAMADOS SEM FINALIZAÇÃO")
+st.markdown("### CHAMADOS SEM FINALIZAÇÃO")
 
 data_extracao = pd.to_datetime("2026-09-10", format='mixed')
 
@@ -170,4 +167,5 @@ st.dataframe(
     use_container_width=True,
     hide_index=True
 )
+
 

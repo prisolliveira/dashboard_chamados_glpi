@@ -2,17 +2,19 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import locale
+from style import CUSTOM_CSS
 
 df = pd.read_csv("../dados/chamados_glpi_tratados.csv", sep=";")
 
 locale.setlocale(locale.LC_TIME, "pt_BR.UTF-8")
 st.set_page_config(layout="wide", page_title="Chamados GLPI - Monitoramento", page_icon="📊")
+st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # CABEÇALHO
 
 st.title("Painel de Chamados de Monitoramento")
 st.caption("Prefeitura de Goianira · Dados extraídos em 10/09/2026")
-st.caption("Período de análise: últimos 6 meses (março a setembro de 2026)")
+st.caption("Período de análise: últimos 9 meses (março a setembro de 2026)")
 
 # KPI CARDS
 
@@ -58,7 +60,8 @@ grafico_volume = px.line(
 
 grafico_volume.update_layout(
     xaxis_title="",
-    yaxis_title="",
+    yaxis_title=""
+    
 )
 
 st.plotly_chart(grafico_volume, use_container_width=True)
@@ -102,7 +105,7 @@ with gf_eq:
         xaxis=dict(showticklabels=False) # retira números do eixo X
     )
 
-    st.plotly_chart(grafico_equipamento)
+    st.plotly_chart(grafico_equipamento, use_container_width=True)
 
 
 with gf_loc:
@@ -135,11 +138,10 @@ with gf_loc:
     grafico_local.update_layout(
         xaxis_title="",
         yaxis_title="",
-        xaxis=dict(showticklabels=False)
+        xaxis=dict(showticklabels=False),
     )
 
-    st.plotly_chart(grafico_local)
-
+    st.plotly_chart(grafico_local, use_container_width=True)
 
 # 4) tabela de chamados novos/em andamento/pendente
 

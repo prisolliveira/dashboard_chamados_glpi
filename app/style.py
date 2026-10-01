@@ -1,65 +1,93 @@
 CUSTOM_CSS = """
     <style>
     .block-container {
-        padding-top: 1.5rem;
+        padding-top: 3.5rem;
         padding-left: 2rem;
         padding-right: 2rem;
         padding-bottom: 2rem;
         max-width: 1100px;
+        overflow: visible;
     }
  
-    /* Título principal */
-    h1 {
-        font-weight: 800 !important;
-        color: #16213e !important;
-        margin-bottom: 0.3rem !important;
-        padding-bottom: 0.8rem !important;
-        border-bottom: 3px solid #16213e !important;
-        font-size: 24px !important;
+    /* ===== Cabeçalho estilo "eyebrow + título + mini-indicadores" ===== */
+    .header-wrap {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        background-color: transparent;
+        padding: 0px;
+        margin-bottom: 1.8rem;
     }
  
-    [data-testid="stCaptionContainer"] {
-        color: #6b7280 !important;
-        font-size: 12px !important;
+    .header-left {
+        min-width: 260px;
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(22, 33, 62, 0.08);
+        padding: 14px 24px;
     }
  
-    /* Espaço extra abaixo do cabeçalho, antes dos KPI cards */
-    div[data-testid="stMetric"] {
-        margin-top: 1.8rem;
+    .header-eyebrow {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        color: #16213e;
+        margin-bottom: 4px;
     }
  
-    /* KPI Cards - cabeçalho escuro estilo "card com topo navy" */
-    div[data-testid="stMetric"] {
-        background-color: #ffffff !important;
-        border: none !important;
-        border-radius: 10px !important;
-        padding: 0px 0px 10px 0px !important;
-        box-shadow: 0 2px 8px rgba(22, 33, 62, 0.08) !important;
-        overflow: hidden !important;
+    .header-title {
+        font-size: 26px;
+        font-weight: 800;
+        color: #16213e;
+        line-height: 1.2;
+        margin-bottom: 4px;
     }
  
-    div[data-testid="stMetric"] label,
-    div[data-testid="stMetricLabel"],
-    div[data-testid="stMetricLabel"] > div,
-    div[data-testid="stMetricLabel"] p {
-        font-size: 10px !important;
-        font-weight: 700 !important;
-        color: #ffffff !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.6px !important;
-        background-color: #16213e !important;
-        padding: 7px 12px !important;
-        margin: 0px 0px 8px 0px !important;
-        width: 100% !important;
-        display: block !important;
+    .header-sub {
+        font-size: 13px;
+        color: #6b7280;
     }
  
-    div[data-testid="stMetricValue"] {
-        font-size: 20px !important;
-        font-weight: 800 !important;
-        color: #16213e !important;
-        padding: 0px 12px !important;
+    .header-right {
+        display: flex;
+        align-items: center;
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(22, 33, 62, 0.08);
+        padding: 10px 0px;
     }
+ 
+    .info-item {
+        display: flex;
+        flex-direction: column;
+        padding: 0px 20px;
+        min-width: 90px;
+    }
+ 
+    .info-label {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: #9aa0ab;
+        margin-bottom: 4px;
+    }
+ 
+    .info-value {
+        font-size: 17px;
+        font-weight: 800;
+        color: #16213e;
+    }
+ 
+    .info-divider {
+        width: 1px;
+        height: 32px;
+        background-color: #e5e7eb;
+    }
+    /* ===== Fim do cabeçalho customizado ===== */
  
     div[data-testid="column"] {
         padding: 0px 7px;
